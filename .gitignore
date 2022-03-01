@@ -1,0 +1,12 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+readingFilename.js
+creatingJson.js
+mintNFT.js
+
+#Hardhat files
+cache
+artifacts
