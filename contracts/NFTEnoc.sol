@@ -19,7 +19,8 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
 
     // Public vars
     string public baseTokenURI;
-    uint256 public price = 0.01 ether; // Set the price
+    uint256 public price; // Set the price
+    uint256 public margin = 0.00001 ether; // Set the margin
 
     // Immutable vars
     uint256 public immutable maxSupply; ///only if required
@@ -36,15 +37,14 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
         string memory name,
         string memory symbol,
         string memory baseTokenURI_,
+        uint256 price_,
         uint256 maxSupply_
     ) ERC721A(name, symbol) {
-        require(maxSupply_ > 0, "INVALID_SUPPLY");
+        require(maxSupply_ > 0, "MaxSupply must be greater than 0");
         baseTokenURI = baseTokenURI_;
         maxSupply = maxSupply_;
+        price = price_;
     }
-
-    // Used to validate authorized mint addresses
-    // address private signerAddress = 0x290Df62917EAb5b06E3c04a583E2250A0B46d55f;//Change
 
     mapping(address => uint256) public totalMintsPerAddress;
 
@@ -86,9 +86,13 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     function setSaleState(bool _saleActiveState) public onlyOwner {
         require(
             isSaleActive != _saleActiveState,
-            "NEW_STATE_IDENTICAL_TO_OLD_STATE"
+            "Sale state cannot be the same"
         );
         isSaleActive = _saleActiveState;
+    }
+    function changeMargin(uint256 _newMargin) public onlyOwner {
+        require(_newMargin != margin, 'New margin cannot be the same');
+        margin = _newMargin;
     }
 
     /// @notice To get the total number of NFTs owned by an address
@@ -140,7 +144,7 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     function setIsAllowListActive(bool _isAllowListActive) external onlyOwner {
         require(
             isAllowListActive != _isAllowListActive,
-            "NEW_STATE_IDENTICAL_TO_OLD_STATE"
+            "Allow List Status cannot be the same"
         );
         isAllowListActive = _isAllowListActive;
     }
@@ -162,7 +166,7 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
         for (uint256 i = 0; i < _addressToWhitelist.length; i++) {
             require(
                 whitelistedAddresses[_addressToWhitelist[i]] != 1,
-                "ADDRESS_ALREADY_WHITELISTED"
+                "Whitelist: User already whitelisted"
             );
             whitelistedAddresses[_addressToWhitelist[i]] = 1;
         }
@@ -173,7 +177,7 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     function addUser(address _addressToWhitelist) public onlyOwner {
         require(
             whitelistedAddresses[_addressToWhitelist] != 1,
-            "ADDRESS_ALREADY_WHITELISTED"
+            "Whitelist: User already whitelisted"
         );
         whitelistedAddresses[_addressToWhitelist] = 1;
     }
@@ -191,7 +195,7 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     /// @notice View the price required to mint the NFT
     /// @param mintNumber The number of NFTs to mint
     function viewPrice (uint256 mintNumber) public view returns (uint256) {
-      return  ((price * mintNumber) - 0.0001 ether);
+      return  ((price * mintNumber) - margin);
     }
 
     /// @notice Mint the NFT
@@ -204,23 +208,23 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
         isWhitelisted(msg.sender)
     {
         uint256 currentSupply = totalSupply();
-        require(isSaleActive, "SALE_IS_NOT_ACTIVE");
+        require(isSaleActive, "Sale is not active");
         require(
             totalMintsPerAddress[msg.sender] + mintNumber <=
                 maximumAllowedMintsPerAddress,
-            "MINT_TOO_LARGE"
+            "Mint is too large"
         );
         require(isAllowListActive, "Allow list is not active");
 
         // Imprecise floats are scary. Front-end should utilize BigNumber for safe precision, but adding margin just to be safe to not fail txs
         require(
-            msg.value >= ((price * mintNumber) - 0.0001 ether),
-            "INVALID_PRICE"
+            msg.value >= ((price * mintNumber) - margin),
+            "Invalid Price"
         );
 
         require(
             currentSupply + mintNumber <= maxSupply,
-            "NOT_ENOUGH_MINTS_AVAILABLE"
+            "Not enough Mints available"
         );
 
         totalMintsPerAddress[msg.sender] += mintNumber;
@@ -247,7 +251,7 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
      * @notice Allow contract owner to withdraw funds to its own account.
      */
     function withdraw() external onlyOwner {
-    (bool os, ) = payable(owner()).call{value: address(this).balance}("");
+    (bool os, ) = owner().call{value: address(this).balance}("");
     require(os);
     }
 }

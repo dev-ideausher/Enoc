@@ -16,9 +16,11 @@ contract EnocNFTMarket is ReentrancyGuard {
     Counters.Counter private _nftItemsSold;
 
     address payable owner;
+    uint256 public listingPrice ;
 
-    constructor() {
+    constructor(uint256 _listingPrice) {
         owner = payable(msg.sender);
+        listingPrice = _listingPrice;
     }
 
     struct NFTItem {
@@ -41,23 +43,15 @@ contract EnocNFTMarket is ReentrancyGuard {
         address owner,
         uint256 price,
         bool isSold
-    );
-
-    uint256 listingPrice = 0.01 ether;
-
-    /// @notice returns the Listing Price
-    /// @dev Not neccessary and can be removed
-    function getListingPrice() public view returns (uint256) {
-        return listingPrice;
-    }
+    );    
 
     /// @notice Sets the new Listing Price;
     /// @param _newListingPrice The new Listing Price
     function setlistingPrice(uint256 _newListingPrice) external {
-        require(msg.sender == owner, "ONLY_OWNER_CAN_SET_PRICE");
+        require(msg.sender == owner, "Only the owner can set the Listing Price");
         require(
             listingPrice != _newListingPrice,
-            "NEW_PRICE_IDENTICAL_TO_OLD_PRICE"
+            "The new Listing Price must be different from the current one"
         );
         listingPrice = _newListingPrice;
     }
