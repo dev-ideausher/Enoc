@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract EnocNFTMarket is ReentrancyGuard {
+contract CellarCoinNFTMarket is ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _nftIdCounter;
     Counters.Counter private _nftItemsSold;

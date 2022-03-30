@@ -10,11 +10,11 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
-/// @title Enotecum NFT
+/// @title CellarCoin NFT
 /// @author The name of the author
 /// @notice Mint NFT
 /// @dev Batch Mints using Whitelisting
-contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
+contract CellarCoinNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     using Strings for uint256;
 
     // Public vars
@@ -202,10 +202,9 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
     /// @param mintNumber Number of NFTs to mint
     function mint(uint256 mintNumber)
         external
-        payable
         virtual
         nonReentrant
-        isWhitelisted(msg.sender)
+        onlyOwner
     {
         uint256 currentSupply = totalSupply();
         require(isSaleActive, "Sale is not active");
@@ -216,11 +215,11 @@ contract EnotNFT is ERC721A, ReentrancyGuard, Ownable, Pausable {
         );
         require(isAllowListActive, "Allow list is not active");
 
-        // Imprecise floats are scary. Front-end should utilize BigNumber for safe precision, but adding margin just to be safe to not fail txs
-        require(
-            msg.value >= ((price * mintNumber) - margin),
-            "Invalid Price"
-        );
+        // // Imprecise floats are scary. Front-end should utilize BigNumber for safe precision, but adding margin just to be safe to not fail txs
+        // require(
+        //     msg.value >= ((price * mintNumber) - margin),
+        //     "Invalid Price"
+        // );
 
         require(
             currentSupply + mintNumber <= maxSupply,
